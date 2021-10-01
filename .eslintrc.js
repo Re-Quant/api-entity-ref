@@ -93,7 +93,7 @@ module.exports = {
           typescript: {
             // use <root>/path/to/folder/tsconfig.json
             // More examples: https://www.npmjs.com/package/eslint-import-resolver-typescript#configuration
-            directory: './tsconfig.json',
+            project: './tsconfig.json',
           },
         },
       },
