@@ -4,7 +4,7 @@ import { ApiPropertyOptions } from '@nestjs/swagger';
 import { createApiPropertyDecorator } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
 import { ValidationMetadata, getFromContainer, MetadataStorage } from './@import-fix/class-validator';
-import { AnyObject, isSymbol, Type } from './utils';
+import { AnyObject, Type } from './utils';
 
 export const apiDecoratorsSymbol = Symbol('api-decorators');
 export const entityConstructorSymbol = Symbol('entity-constructor');
@@ -51,7 +51,7 @@ export class ApiPropertyRefDecorator {
   ) {
     this.target = target as Function & { constructor: ApiEntityRefType };
 
-    if (isSymbol(propertyKey)) {
+    if (_.isSymbol(propertyKey)) {
       const entityName = _.isFunction(target) && target.name ? target.name : undefined;
       const entityNameInfo = ` Entity: ${ String(entityName) }`;
       // eslint-disable-next-line no-use-before-define
@@ -102,7 +102,6 @@ export class ApiPropertyRefDecorator {
                                ...existingMetadata,
                              };
       Reflect.defineMetadata(DECORATORS.API_MODEL_PROPERTIES, metadataToSave, this.target, this.propertyKey);
-
 
       const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, this.target) as string[] || [];
 

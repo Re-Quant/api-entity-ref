@@ -64,7 +64,7 @@
     "@nestjs/common": "~8.0.9",
     "@nestjs/core": "~8.0.9",
     "@nestjs/swagger": "~5.1.0",
-    "@types/lodash": "~4.14.149",
+    "@types/lodash": "~4.14.175",
     "class-validator": "~0.13.1",
     "class-transformer": "~0.4.0",
     "rxjs": "~7.3.0",
