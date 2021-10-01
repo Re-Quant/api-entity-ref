@@ -1,12 +1,11 @@
 import * as _ from 'lodash';
-import tb from 'ts-toolbelt';
 
 import { apiDecoratorsSymbol, entityConstructorSymbol, ApiEntityRefType } from './api-property-ref.decorator';
-import { AnyObject, Type } from './utils';
+import { AnyObject, Type, Required } from './utils';
 
 const hasApiDecorators = (
   value: unknown | ApiEntityRefType,
-): value is tb.O.Required<ApiEntityRefType, typeof apiDecoratorsSymbol> =>
+): value is Required<ApiEntityRefType, typeof apiDecoratorsSymbol> =>
   _.isArray((value as ApiEntityRefType)[apiDecoratorsSymbol]);
 
 export function ApiEntityRef<T extends AnyObject>(
