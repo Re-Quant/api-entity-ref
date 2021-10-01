@@ -3,7 +3,7 @@ import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { ApiPropertyOptions } from '@nestjs/swagger';
 import { createApiPropertyDecorator } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
-import { ValidationMetadata, getFromContainer, MetadataStorage } from './@import-fix/class-validator';
+import { ValidationMetadata, getMetadataStorage } from './@import-fix/class-validator';
 import { AnyObject, isClass, Type } from './utils';
 
 export const apiDecoratorsSymbol = Symbol('api-decorators');
@@ -34,7 +34,7 @@ export interface ApiPropertyRefOptions {
 
 export class ApiPropertyRefDecorator {
 
-  private static readonly classValidatorStorage = getFromContainer(MetadataStorage);
+  private static readonly classValidatorStorage = getMetadataStorage();
 
   private readonly classProto: { constructor: ApiEntityRefType };
   private readonly propertyKey: string;
