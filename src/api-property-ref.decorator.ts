@@ -4,7 +4,7 @@ import { ApiPropertyOptions } from '@nestjs/swagger';
 import { createApiPropertyDecorator } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
 import { ValidationMetadata, getFromContainer, MetadataStorage } from './@import-fix/class-validator';
-import { AnyObject, Type } from './utils';
+import { AnyObject, isClass, Type } from './utils';
 
 export const apiDecoratorsSymbol = Symbol('api-decorators');
 export const entityConstructorSymbol = Symbol('entity-constructor');
@@ -36,7 +36,7 @@ export class ApiPropertyRefDecorator {
 
   private static readonly classValidatorStorage = getFromContainer(MetadataStorage);
 
-  private readonly target: Function & { constructor: ApiEntityRefType };
+  private readonly classProto: { constructor: ApiEntityRefType };
   private readonly propertyKey: string;
   private readonly normalizedEntityPropertyKey: string;
   private readonly options: Readonly<ApiPropertyRefOptions>;
@@ -44,18 +44,20 @@ export class ApiPropertyRefDecorator {
   private classValidatorStorage = (this.constructor as typeof ApiPropertyRefDecorator).classValidatorStorage;
 
   public constructor(
-    target: AnyObject,
+    classProto: AnyObject,
     propertyKey: string | symbol,
     private swaggerOptions: ApiPropertyOptions,
     options: ApiPropertyRefOptions,
   ) {
-    this.target = target as Function & { constructor: ApiEntityRefType };
+    const apiPropertyRefClassName = ApiPropertyRef.name; // eslint-disable-line no-use-before-define
+    if (!isClass(classProto.constructor)) {
+      throw new Error(`${ apiPropertyRefClassName } decorator is applicable only to class properties`);
+    }
+    this.classProto = classProto as { constructor: ApiEntityRefType };
 
     if (_.isSymbol(propertyKey)) {
-      const entityName = _.isFunction(target) && target.name ? target.name : undefined;
-      const entityNameInfo = ` Entity: ${ String(entityName) }`;
-      // eslint-disable-next-line no-use-before-define
-      throw new Error(`${ ApiPropertyRef.name } decorator is not applicable to 'symbol' properties.${ entityNameInfo }`);
+      const entityNameInfo = ` Entity: ${ String(this.classProto.constructor.name) }`;
+      throw new Error(`${ apiPropertyRefClassName } decorator is not applicable to 'symbol' properties.${ entityNameInfo }`);
     }
     this.propertyKey =  propertyKey;
 
@@ -69,9 +71,9 @@ export class ApiPropertyRefDecorator {
 
   public addMetadata(): void {
     (
-      this.target.constructor[apiDecoratorsSymbol]
-        = Object.prototype.hasOwnProperty.call(this.target.constructor, apiDecoratorsSymbol)
-          ? (this.target.constructor[apiDecoratorsSymbol] || [])
+      this.classProto.constructor[apiDecoratorsSymbol]
+        = Object.prototype.hasOwnProperty.call(this.classProto.constructor, apiDecoratorsSymbol)
+          ? (this.classProto.constructor[apiDecoratorsSymbol] || [])
           : []
     ).push({
       swagger: this.copySwaggerDecorators,
@@ -87,7 +89,7 @@ export class ApiPropertyRefDecorator {
     ) as AnyObject;
     if (existingEntityMetadata) {
       const targetMetadata
-              = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, this.target, this.propertyKey) as AnyObject;
+              = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, this.classProto, this.propertyKey) as AnyObject;
 
       const existingMetadata = targetMetadata || existingEntityMetadata;
       const newMetadata = _.pickBy(this.swaggerOptions, _.negate(_.isUndefined));
@@ -101,20 +103,20 @@ export class ApiPropertyRefDecorator {
                                ...newMetadata,
                                ...existingMetadata,
                              };
-      Reflect.defineMetadata(DECORATORS.API_MODEL_PROPERTIES, metadataToSave, this.target, this.propertyKey);
+      Reflect.defineMetadata(DECORATORS.API_MODEL_PROPERTIES, metadataToSave, this.classProto, this.propertyKey);
 
-      const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, this.target) as string[] || [];
+      const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, this.classProto) as string[] || [];
 
       const key = `:${ this.propertyKey }`;
       if (!properties.includes(key)) {
         Reflect.defineMetadata(
           DECORATORS.API_MODEL_PROPERTIES_ARRAY,
           [...properties, `:${ this.propertyKey }`],
-          this.target,
+          this.classProto,
         );
       }
     } else if (!_.isEmpty(this.swaggerOptions)) {
-      createApiPropertyDecorator(this.swaggerOptions)(this.target, this.propertyKey);
+      createApiPropertyDecorator(this.swaggerOptions)(this.classProto, this.propertyKey);
     }
   };
 
@@ -179,12 +181,10 @@ export class ApiPropertyRefDecorator {
   };
 }
 
-// TODO: Cover by unit tests
 export function ApiPropertyRef(
   swaggerOptions: ApiPropertyOptions = {},
   options: ApiPropertyRefOptions = {},
 ): PropertyDecorator {
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  return (target: Object, propertyKey: string | symbol): void =>
+  return (target: AnyObject, propertyKey: string | symbol): void =>
     new ApiPropertyRefDecorator(target, propertyKey, swaggerOptions, options).addMetadata();
 }
