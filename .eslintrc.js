@@ -108,10 +108,9 @@ module.exports = {
       ],
       rules: {
         'no-restricted-imports': ['error', {
-          paths: ['class-validator'],
           patterns: ['class-validator/*'],
         }],
-        '@typescript-eslint/ban-types': ['error', { types: { 'Function': false, 'Object': false } }],
+        '@typescript-eslint/ban-types': ['error', { types: { Function: false, Object: false } }],
         '@typescript-eslint/restrict-plus-operands': 'error',
         'import/no-extraneous-dependencies': [
           'error',

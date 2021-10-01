@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 export { ApiEntityRef } from './api-entity-ref.decorator';
 export {
   ApiPropertyRef,
