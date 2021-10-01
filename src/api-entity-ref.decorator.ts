@@ -1,16 +1,15 @@
 import * as _ from 'lodash';
 import tb from 'ts-toolbelt';
 
-import { Type } from './utils';
-
 import { apiDecoratorsSymbol, entityConstructorSymbol, ApiEntityRefType } from './api-property-ref.decorator';
+import { AnyObject, Type } from './utils';
 
 const hasApiDecorators = (
   value: unknown | ApiEntityRefType,
 ): value is tb.O.Required<ApiEntityRefType, typeof apiDecoratorsSymbol> =>
   _.isArray((value as ApiEntityRefType)[apiDecoratorsSymbol]);
 
-export function ApiEntityRef<T extends object>(
+export function ApiEntityRef<T extends AnyObject>(
   EntityConstructor: Type<T>,
   { groups = [] }: { groups?: string[] } = {},
 ): ClassDecorator {
@@ -27,7 +26,8 @@ export function ApiEntityRef<T extends object>(
     let i = 0;
     for (
       let targetOrItsParent = target;
-      targetOrItsParent && i < PARENTS_LIMIT;
+      i < PARENTS_LIMIT && targetOrItsParent;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       i++, targetOrItsParent = Object.getPrototypeOf(targetOrItsParent)
     ) {
       if (!hasApiDecorators(targetOrItsParent)) continue; // eslint-disable-line no-continue

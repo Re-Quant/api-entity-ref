@@ -2,10 +2,9 @@ import * as _ from 'lodash';
 import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { ApiPropertyOptions } from '@nestjs/swagger';
 import { createApiPropertyDecorator } from '@nestjs/swagger/dist/decorators/api-property.decorator';
-import { getFromContainer, MetadataStorage } from 'class-validator';
-import { ValidationMetadata } from 'class-validator/types/metadata/ValidationMetadata';
 
-import { Type, isSymbol } from './utils';
+import { ValidationMetadata, getFromContainer, MetadataStorage } from './@import-fix/class-validator';
+import { AnyObject, isSymbol, Type } from './utils';
 
 export const apiDecoratorsSymbol = Symbol('api-decorators');
 export const entityConstructorSymbol = Symbol('entity-constructor');
@@ -15,14 +14,14 @@ export interface ApiEntityRefType extends Type<unknown> {
     swagger: (EntityConstructor: Type<unknown>) => void;
     validators: (
       EntityConstructor: Type<unknown>,
-      realTarget: Type<any>,
+      realTarget: Type,
       groups: string[],
     ) => void;
   }[];
   [entityConstructorSymbol]?: Type<unknown>;
 }
 
-const validatorsByConstructor = new Map<Type<any>,
+const validatorsByConstructor = new Map<Type,
   {
     /* groupsHashKey is a sorted, concatenated by "," groups array */
     [groupsHasKey: string]: Map<string | symbol, ValidationMetadata[]>;
@@ -45,7 +44,7 @@ export class ApiPropertyRefDecorator {
   private classValidatorStorage = (this.constructor as typeof ApiPropertyRefDecorator).classValidatorStorage;
 
   public constructor(
-    target: object,
+    target: AnyObject,
     propertyKey: string | symbol,
     private swaggerOptions: ApiPropertyOptions,
     options: ApiPropertyRefOptions,
@@ -54,7 +53,8 @@ export class ApiPropertyRefDecorator {
 
     if (isSymbol(propertyKey)) {
       const entityName = _.isFunction(target) && target.name ? target.name : undefined;
-      const entityNameInfo = ` Entity: ${ entityName }`;
+      const entityNameInfo = ` Entity: ${ String(entityName) }`;
+      // eslint-disable-next-line no-use-before-define
       throw new Error(`${ ApiPropertyRef.name } decorator is not applicable to 'symbol' properties.${ entityNameInfo }`);
     }
     this.propertyKey =  propertyKey;
@@ -84,9 +84,10 @@ export class ApiPropertyRefDecorator {
       DECORATORS.API_MODEL_PROPERTIES,
       EntityConstructor.prototype,
       this.normalizedEntityPropertyKey,
-    );
+    ) as AnyObject;
     if (existingEntityMetadata) {
-      const targetMetadata = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, this.target, this.propertyKey);
+      const targetMetadata
+              = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES, this.target, this.propertyKey) as AnyObject;
 
       const existingMetadata = targetMetadata || existingEntityMetadata;
       const newMetadata = _.pickBy(this.swaggerOptions, _.negate(_.isUndefined));
@@ -103,7 +104,7 @@ export class ApiPropertyRefDecorator {
       Reflect.defineMetadata(DECORATORS.API_MODEL_PROPERTIES, metadataToSave, this.target, this.propertyKey);
 
 
-      const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, this.target) || [];
+      const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, this.target) as string[] || [];
 
       const key = `:${ this.propertyKey }`;
       if (!properties.includes(key)) {
@@ -120,7 +121,7 @@ export class ApiPropertyRefDecorator {
 
   private copyClassValidatorDecorators = (
     EntityConstructor: Type<unknown>,
-    realTarget: Type<any>,
+    realTarget: Type,
     groups: string[] = [],
   ): void => {
     const groupsHashKey = [...groups].sort().join();
@@ -136,12 +137,18 @@ export class ApiPropertyRefDecorator {
       validators = new Map<string, ValidationMetadata[]>();
 
       this.classValidatorStorage
-          .getTargetValidationMetadatas(EntityConstructor, undefined as any /* lib typings issue */, groups)
+          .getTargetValidationMetadatas(
+            EntityConstructor,
+            undefined as any /* lib typings issue */,
+            undefined as any /* lib typings issue */, // TODO: Implement global .always here
+            undefined as any /* lib typings issue */,
+            groups,
+          )
           .forEach((validator) => {
             let propValidators = validators?.get(validator.propertyName);
             if (!propValidators) {
               propValidators = [];
-            validators?.set(validator.propertyName, propValidators);
+              validators?.set(validator.propertyName, propValidators);
             }
             propValidators.push(validator);
           });
@@ -159,8 +166,10 @@ export class ApiPropertyRefDecorator {
           ...validator,
           propertyName: this.propertyKey,
           target: realTarget,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           validationOptions: {
             ...(validator.validationTypeOptions || {}),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
             always: hasNoGroupsDiff ? true      : validator.validationTypeOptions?.always ?? undefined,
             groups: hasNoGroupsDiff ? undefined : groupsDiff,
           },
@@ -176,6 +185,7 @@ export function ApiPropertyRef(
   swaggerOptions: ApiPropertyOptions = {},
   options: ApiPropertyRefOptions = {},
 ): PropertyDecorator {
-  return (target: object, propertyKey: string | symbol): void =>
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  return (target: Object, propertyKey: string | symbol): void =>
     new ApiPropertyRefDecorator(target, propertyKey, swaggerOptions, options).addMetadata();
 }

@@ -15,7 +15,6 @@ module.exports = {
     'airbnb-base',
   ],
   rules: {
-    'import/no-extraneous-dependencies': [ 'error' ],
     'import/prefer-default-export': 'off',
     'filenames/match-regex': ['error', /^[0-9a-z.-]+$/, true],
     'consistent-return': 0,
@@ -107,6 +106,11 @@ module.exports = {
         'plugin:@typescript-eslint/recommended-requiring-type-checking',
       ],
       rules: {
+        'no-restricted-imports': ['error', {
+          paths: ['class-validator'],
+          patterns: ['class-validator/*'],
+        }],
+        '@typescript-eslint/ban-types': ['error', { types: { 'Function': false, 'Object': false } }],
         '@typescript-eslint/restrict-plus-operands': 'error',
         'import/no-extraneous-dependencies': [
           'error',
