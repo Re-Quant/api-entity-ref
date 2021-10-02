@@ -26,6 +26,7 @@
     "pre-push": "yarn run lint && yarn run build:prod && yarn run tpl-repo:check",
     "preinstall": "node ./tools/check-yarn.js",
     "test": "jest -c jest.config.js",
+    "test:cov": "yarn run test --coverage",
     "test:watch": "yarn run test --watch",
     "tpl-repo": "tools/merge-with-repository-template.sh",
     "tpl-repo:check": "yarn run tpl-repo check",
