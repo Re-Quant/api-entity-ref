@@ -4,7 +4,7 @@
   "author": "Anton Korniychuk <dev@korniychuk.pro>",
   "license": "GPL-3.0",
   "private": false,
-  "version": "1.1.5",
+  "version": "1.1.6",
   "bugs": {
     "url": "https://github.com/z-brain/api-entity-ref/issues"
   },
@@ -21,7 +21,6 @@
     "build": "rimraf dist && tsc -p tsconfig.build.json",
     "build:prod": "yarn run build",
     "build:local": "yarn run build && yarn run gen-public-package.json && cp README.md dist/ && tools/install-me-from.sh",
-
     "lint": "eslint --ext .js,.ts src/**",
     "lint:fix": "yarn run lint --fix",
     "preinstall": "node ./tools/check-yarn.js",
@@ -33,7 +32,6 @@
     "tpl-repo:merge": "yarn run tpl-repo merge",
     "gen-public-package.json": "tools/gen-public-package.js",
     "prepare": "husky install",
-
     "pre-push": "yarn run lint && yarn run build:prod && yarn run tpl-repo:check",
     "ci": "yarn run lint && yarn run test:cov && yarn run build:prod"
   },
