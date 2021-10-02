@@ -36,6 +36,8 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 16
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Download 'dist' from the previous Job
         uses: actions/download-artifact@v1
         with:
@@ -48,6 +50,4 @@ jobs:
       - name: Generate public README.md
         run: cp README.md dist/
       - run: npm publish dist --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: git push --no-verify & git push --tags --no-verify
