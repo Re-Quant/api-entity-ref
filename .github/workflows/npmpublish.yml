@@ -33,11 +33,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: 16
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          registry-url: 'https://registry.npmjs.org'
       - name: Download 'dist' from the previous Job
         uses: actions/download-artifact@v1
         with:
@@ -50,4 +49,6 @@ jobs:
       - name: Generate public README.md
         run: cp README.md dist/
       - run: npm publish dist --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: git push --no-verify & git push --tags --no-verify
