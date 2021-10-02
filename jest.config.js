@@ -1,6 +1,9 @@
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
+const toBoolean = value => (value === 'true' ? true : !!+value);
+
+/** @type {import('ts-jest/dist/types').InitialOptionsTsJest} */
 module.exports = {
   // All imported modules in your tests should be mocked automatically
   // automock: false,
@@ -18,12 +21,10 @@ module.exports = {
   // clearMocks: false,
 
   // Indicates whether the coverage information should be collected while executing the test
-  // collectCoverage: false,
+  collectCoverage: toBoolean(process.env.JEST_COLLECT_COVERAGE),
 
   // An array of glob patterns indicating a set of files for which coverage information should be collected
-  collectCoverageFrom: [
-    'src/**/*.(t|j)s',
-  ],
+  // collectCoverageFrom: null,
 
   // The directory where Jest should output its coverage files
   coverageDirectory: '../coverage',
@@ -34,12 +35,13 @@ module.exports = {
   // ],
 
   // A list of reporter names that Jest uses when writing coverage reports
-  // coverageReporters: [
+  coverageReporters: [
   //   "json",
   //   "text",
-  //   "lcov",
+    'text-summary',
+    'lcov',
   //   "clover"
-  // ],
+  ],
 
   // An object that configures minimum threshold enforcement for coverage results
   // coverageThreshold: null,
@@ -159,7 +161,7 @@ module.exports = {
   // ],
 
   // The regexp pattern or array of patterns that Jest uses to detect test files
-  testRegex: '\\.spec\\.ts$',
+  // testRegex: '\\.spec\\.ts$',
 
   // This option allows the use of a custom results processor
   // testResultsProcessor: null,
