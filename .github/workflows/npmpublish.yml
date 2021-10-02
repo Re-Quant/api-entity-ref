@@ -48,7 +48,8 @@ jobs:
         run: yarn run gen-public-package.json
       - name: Generate public README.md
         run: cp README.md dist/
-      - run: npm publish dist --access public
+      - run: npm publish --access public
+        working-directory: ./dist
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: git push --no-verify & git push --tags --no-verify
