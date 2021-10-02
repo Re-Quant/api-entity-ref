@@ -32,7 +32,7 @@
     "tpl-repo:merge": "yarn run tpl-repo merge",
     "gen-public-package.json": "tools/gen-public-package.js",
     "prepare": "husky install",
-    "pre-push": "yarn run lint && yarn run build:prod && yarn run tpl-repo:check",
+    "pre-push": "yarn run lint && yarn run test && yarn run build:prod && yarn run tpl-repo:check",
     "ci": "yarn run lint && yarn run test:cov && yarn run build:prod"
   },
   "dependencies": {
