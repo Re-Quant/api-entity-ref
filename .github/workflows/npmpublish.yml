@@ -23,8 +23,8 @@ jobs:
       - name: Yarn install
         run: yarn install
 
-      - name: Runing prepush
-        run: JEST_COLLECT_COVERAGE=true yarn run pre-push
+      - name: Runing lint, tests and make build
+        run: yarn run ci
 
       - name: Set GIT username & email
         run: git config --global user.name 'GIT Workflow CI' && git config --global user.email dev@korniychuk.pro
