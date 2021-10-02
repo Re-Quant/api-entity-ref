@@ -11,25 +11,7 @@ on:
       - develop
 
 jobs:
-  prepush-and-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 16
-      - name: Yarn install
-        run: yarn install
-      - name: Runing prepush
-        run: yarn run pre-push
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v1
-        with:
-          name: dist
-          path: dist
-
-  publish:
-    needs: prepush-and-build
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -37,10 +19,10 @@ jobs:
         with:
           node-version: 16
           registry-url: 'https://registry.npmjs.org'
-      - name: Download 'dist' from the previous Job
-        uses: actions/download-artifact@v1
-        with:
-          name: dist
+      - name: Yarn install
+        run: yarn install
+      - name: Runing prepush
+        run: yarn run pre-push
       - name: Set GIT username & email
         run: git config --global user.name 'GIT Workflow CI' && git config --global user.email dev@korniychuk.pro
       - run: npm version patch -m 'Update package version version to %s'
@@ -48,6 +30,11 @@ jobs:
         run: yarn run gen-public-package.json
       - name: Generate public README.md
         run: cp README.md dist/
+      - name: Archive production artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: dist
+          path: dist
       - run: npm publish --access public
         working-directory: ./dist
         env:
