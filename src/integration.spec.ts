@@ -1,8 +1,15 @@
+import { Body, Controller, INestApplication, Module, Post } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+
 import { IsInt, IsString, Max, Min, validate } from 'class-validator';
+import { ApiProperty, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ReferenceObject, SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+
 import { ApiEntityRef, ApiPropertyRef } from './public-api';
+import { Type } from './utils';
 
 describe('Integration tests', () => {
-  describe('Test copying class-validator', () => {
+  describe('Test copying class-validator decorators', () => {
     describe('GIVEN: Two classes: User & UserCreateDto. Last one with Api*Ref decorators', () => {
       it(`Testing basic usage, just copying validators. 
           WHEN: Validators on the User class doesn't have any groups and .always modifiers
@@ -122,5 +129,67 @@ describe('Integration tests', () => {
         expect(errors.find(v => v.property === 'name')!.constraints).toEqual({ isString: 'name must be a string' });
       });
     });
-  }); // END Test copying class-validator
+  }); // END Test copying class-validator decorators
+
+  describe('Testing copying nestjs/swagger decorators', () => {
+    describe('GIVEN: Two classes: User & UserCreateDto. Last one with Api*Ref decorators', () => {
+      const createApp = async (...controllers: Type[]) => {
+        @Module({ controllers })
+        class AppModule {}
+        const fixture = await Test.createTestingModule({
+          imports: [AppModule],
+        }).compile();
+        const app = fixture.createNestApplication();
+        return app;
+      };
+      const buildDocSchemas = (app: INestApplication) => {
+        const options = new DocumentBuilder().build();
+        const document = SwaggerModule.createDocument(app, options);
+        return document.components!.schemas!;
+      };
+      /** dereference helper */
+      const d = (data?: SchemaObject | ReferenceObject): SchemaObject | undefined => {
+        if (!data) return data;
+        if ((data as ReferenceObject).$ref) {
+          throw new Error(`Can't test ReferenceObject: ${ JSON.stringify(data) }`);
+        }
+        return data as SchemaObject;
+      };
+      it(`Testing simple case. Just copying swagger decorators & patching options.
+        WHEN: There some fields on User class decorated with @ApiProperty()
+        THEN: All swagger decorators should be copy-pasted to the DTO`, async () => {
+        // arrange
+        class User {
+          @ApiProperty({ minimum: 1 })
+          public id!: number;
+
+          @ApiProperty()
+          public name!: string;
+        }
+
+        @ApiEntityRef(User)
+        class UserCreateDto {
+          @ApiPropertyRef()
+          public id!: number;
+
+          @ApiPropertyRef({ required: false })
+          public name?: string;
+        }
+        @Controller()
+        class UserController {
+          // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
+          @Post() public create(@Body() body: UserCreateDto): void {}
+        }
+        const app = await createApp(UserController);
+
+        // act
+        const schemas = buildDocSchemas(app);
+
+        // assert
+        expect(d(d(schemas.UserCreateDto)?.properties?.id)).toEqual({ type: 'number', minimum: 1 });
+        expect(d(d(schemas.UserCreateDto)?.properties?.name)).toEqual({ type: 'string' });
+        expect(d(schemas.UserCreateDto)?.required).toEqual(['id']);
+      });
+    });
+  }); // END: Testing copying nestjs/swagger decorators
 });
