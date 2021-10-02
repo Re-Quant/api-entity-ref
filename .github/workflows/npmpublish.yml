@@ -47,9 +47,7 @@ jobs:
         run: yarn run gen-public-package.json
       - name: Generate public README.md
         run: cp README.md dist/
-      - name: NPM Authentication
-        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        env:
-          NPM_TOKEN: ${{secrets.npm_token}}
       - run: npm publish dist --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - run: git push --no-verify & git push --tags --no-verify
