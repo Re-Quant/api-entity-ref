@@ -3,7 +3,14 @@ import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { ApiPropertyOptions } from '@nestjs/swagger';
 import { createApiPropertyDecorator } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
-import { defaultMetadataStorage, TypeMetadata, ExposeMetadata, ExcludeMetadata } from './@import-fix/class-transformer';
+import {
+  defaultMetadataStorage,
+  ExcludeMetadata,
+  ExposeMetadata,
+  TransformationType,
+  TransformMetadata,
+  TypeMetadata,
+} from './@import-fix/class-transformer';
 import { getMetadataStorage, ValidationMetadata } from './@import-fix/class-validator';
 import { AnyObject, isClass, Type } from './utils';
 
@@ -213,6 +220,20 @@ export class ApiPropertyRefDecorator {
       const copy: ExcludeMetadata = { ...excludeOnClass, target: this.classProto.constructor, propertyName: undefined };
       storage.addExcludeMetadata(copy);
     }
+
+    const transformMetadataCopyCb = (meta: TransformMetadata) => {
+      const copy: TransformMetadata = { ...meta, target: this.classProto.constructor, propertyName: this.propertyKey };
+      storage.addTransformMetadata(copy);
+    };
+    // Notice: CLASS_TO_CLASS transformers is not tested, but should work.
+    // I don't understand what they do and how to use them. So I don't know how to test them and don't.
+    _.values(TransformationType).forEach(transformationTypeValue =>
+      storage.findTransformMetadatas(
+        EntityConstructor,
+        this.normalizedEntityPropertyKey,
+        transformationTypeValue as TransformationType,
+      ).forEach(transformMetadataCopyCb),
+    );
   }
 
 }

@@ -1,7 +1,7 @@
 import { Body, Controller, INestApplication, Module, Post } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 
-import { classToPlain, Exclude, Expose, plainToClass, Type } from 'class-transformer';
+import { classToPlain, Exclude, Expose, plainToClass, Transform, Type } from 'class-transformer';
 import { IsInt, IsString, Max, Min, validate } from 'class-validator';
 import { ApiProperty, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ReferenceObject, SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
@@ -350,6 +350,54 @@ describe('Integration tests', () => {
           expect(raw).toEqual({ name: ins.name });
         });
       }); // END @Expose() & @Exclude() together
+
+      describe(`@${ Transform.name }() decorators`, () => {
+        describe('Copying @Transform() decorators from an Entity to a DTO.', () => {
+          it('Should copy PLAIN_TO_CLASS decorators', () => {
+            // arrange
+            const date = new Date();
+            class User {
+              @Transform(({ value }) => new Date(value))
+              public createdAt!: Date;
+            }
+            @ApiEntityRef(User)
+            class UserCreateDto {
+              @ApiPropertyRef()
+              public createdAt!: Date;
+            }
+            const raw = { createdAt: date.toISOString() };
+
+            // act
+            const ins = plainToClass(UserCreateDto, raw);
+
+            // assert
+            expect(ins.createdAt).toBeInstanceOf(Date);
+            expect(ins.createdAt.toISOString()).toEqual(date.toISOString());
+          });
+
+          it('Should copy CLASS_TO_PLAIN decorators', () => {
+            // arrange
+            const date = new Date();
+            class User {
+              @Transform(({ value }) => (value as Date).toISOString(), { toPlainOnly: true })
+              public createdAt!: Date;
+            }
+            @ApiEntityRef(User)
+            class UserCreateDto {
+              @ApiPropertyRef()
+              public createdAt!: Date;
+            }
+            const ins = new UserCreateDto();
+            ins.createdAt = date;
+
+            // act
+            const raw = classToPlain(ins);
+
+            // assert
+            expect(raw).toEqual({ createdAt: date.toISOString() });
+          });
+        });
+      }); // END @${ Transform.name }() decorators
     });
   });
 });
