@@ -228,7 +228,7 @@ describe('Integration tests', () => {
       }); // END @Type() decorator
 
       describe('@Expose() decorator', () => {
-        it('Basic usage, just copying @Expose() decorator from an Entity to a DTO.', () => {
+        it('Basic usage, just copying @Expose() decorator from a property-level an Entity to a DTO.', () => {
           // arrange
           class User {
             @Expose()
@@ -257,7 +257,7 @@ describe('Integration tests', () => {
       }); // END @Expose() decorator
 
       describe('@Exclude() decorator', () => {
-        it('Basic usage, just copying @Exclude() decorator from an Entity to a DTO.', () => {
+        it('Basic usage, just copying @Exclude() decorator from a property-level an Entity to a DTO.', () => {
           // arrange
           class User {
             public name!: string;
@@ -284,6 +284,40 @@ describe('Integration tests', () => {
           expect(raw).toEqual({ name: ins.name });
         });
       }); // END @Exclude() decorator
+
+      describe('@Expose() & @Exclude() together', () => {
+        it(`Testing class-level using of @Expose.
+            WHEN: @Expose() decorator is added to the User class at the class level.
+             AND: @Exclude() decorator is added to the .password field
+             AND: strategy is 'excludeAll'
+            THEN: class-level & property-level decorators should be copied`, () => {
+          // arrange
+          @Expose()
+          class User {
+            public name!: string;
+
+            @Exclude()
+            public password!: string;
+          }
+          @ApiEntityRef(User)
+          class UserCreateDto {
+            @ApiPropertyRef()
+            public name!: string;
+
+            @ApiPropertyRef()
+            public password!: string;
+          }
+          const ins = new UserCreateDto();
+          ins.name = 'aaa';
+          ins.password = 'bbb';
+
+          // act
+          const raw = classToPlain(ins, { strategy: 'excludeAll' });
+
+          // assert
+          expect(raw).toEqual({ name: ins.name });
+        });
+      });
     });
   });
 });

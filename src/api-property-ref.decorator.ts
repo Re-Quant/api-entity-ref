@@ -184,22 +184,29 @@ export class ApiPropertyRefDecorator {
   }; // END copyClassValidatorDecorators()
 
   private copyClassTransformerDecorators(EntityConstructor: Type<unknown>): void {
-    const type = defaultMetadataStorage.findTypeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
+    const storage = defaultMetadataStorage;
+
+    const type = storage.findTypeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
     if (type) {
       const copy: TypeMetadata = { ...type, target: this.classProto.constructor, propertyName: this.propertyKey };
-      defaultMetadataStorage.addTypeMetadata(copy);
+      storage.addTypeMetadata(copy);
     }
 
-    const expose = defaultMetadataStorage.findExposeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
+    const expose = storage.findExposeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
     if (expose) {
       const copy: ExposeMetadata = { ...expose, target: this.classProto.constructor, propertyName: this.propertyKey };
-      defaultMetadataStorage.addExposeMetadata(copy);
+      storage.addExposeMetadata(copy);
+    }
+    const exposeOnClass = storage.findExposeMetadata(EntityConstructor, undefined as any /* typing issue */);
+    if (exposeOnClass) {
+      const copy: ExposeMetadata = { ...exposeOnClass, target: this.classProto.constructor, propertyName: undefined };
+      storage.addExposeMetadata(copy);
     }
 
-    const exclude = defaultMetadataStorage.findExcludeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
+    const exclude = storage.findExcludeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
     if (exclude) {
       const copy: ExcludeMetadata = { ...exclude, target: this.classProto.constructor, propertyName: this.propertyKey };
-      defaultMetadataStorage.addExcludeMetadata(copy);
+      storage.addExcludeMetadata(copy);
     }
   }
 
