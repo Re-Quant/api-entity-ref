@@ -398,6 +398,86 @@ describe('Integration tests', () => {
           });
         });
       }); // END @${ Transform.name }() decorators
-    });
-  });
+    }); // END GIVEN: Two classes: User & UserCreateDto. Last one with Api*Ref decorators
+
+    describe('SCENARIO: Inheritance testing', () => {
+      it(`DTOs inheritance testing.
+          WHEN: User, UserCreateDto extends UserBaseDto.
+           AND: User has Type & Exclude decorators of fields.
+           AND: UserCreateDto has one field with @${ ApiPropertyRef.name }(), UserBaseDto another similar.
+          THEN: All decorators from User have to be copied to UserCreateDto`, () => {
+        // arrange
+        class Name {
+          public first!: string;
+        }
+        class User {
+          public id!: number;
+
+          @Type(() => Name)
+          public name!: Name;
+
+          @Exclude()
+          public password!: string;
+        }
+        abstract class UserBaseDto {
+          @ApiPropertyRef()
+          public id!: number;
+
+          @ApiPropertyRef()
+          public password!: string;
+        }
+        @ApiEntityRef(User)
+        class UserCreateDto extends UserBaseDto {
+          @ApiPropertyRef()
+          public name!: Name;
+        }
+        const raw = { id: 1, name: { first: 'aaa' }, password: 'bbb' };
+        const insExpected = { id: 1, name: { first: 'aaa' } };
+
+        // act
+        const ins = plainToClass(UserCreateDto, raw);
+        // assert
+        expect(ins).toEqual(insExpected);
+        expect(ins.name).toBeInstanceOf(Name);
+      });
+
+      it(`Entity inheritance.
+          WHEN:  
+          THEN: `, () => {
+        // arrange
+        class Name {
+          public first!: string;
+        }
+        abstract class BaseUser {
+          @Type(() => Name)
+          public name!: Name;
+        }
+        class User extends BaseUser {
+          public id!: number;
+
+          @Exclude()
+          public password!: string;
+        }
+        @ApiEntityRef(User)
+        class UserCreateDto {
+          @ApiPropertyRef()
+          public id!: number;
+
+          @ApiPropertyRef()
+          public name!: Name;
+
+          @ApiPropertyRef()
+          public password!: string;
+        }
+        const raw = { id: 1, name: { first: 'aaa' }, password: 'bbb' };
+        const insExpected = { id: 1, name: { first: 'aaa' } };
+
+        // act
+        const ins = plainToClass(UserCreateDto, raw);
+        // assert
+        expect(ins).toEqual(insExpected);
+        expect(ins.name).toBeInstanceOf(Name);
+      });
+    }); // END SCENARIO Inheritance testing
+  }); // END Testing copying class-transformer decorators
 });
