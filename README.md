@@ -15,7 +15,7 @@
   </a>
 </p>
 
-Decorators to copy swagger & class-validator metadata from one class to another
+Decorators to copy `@nestjs/swagger`, `class-validator` and `class-transformer` metadata from one class to another.
 
 *Notice: If you have any propositions feel free to make an issue or create a pull request.*
 
@@ -86,6 +86,7 @@ export class AccountUpdateDto extends AccountBaseDto implements Omit<Account, 'f
 ```typescript
 import { ApiProperty, ApiPropertyOptional, ApiResponseProperty } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, Length } from 'class-validator';
+lmport { Type } from 'class-transformer';
 
 import { IDInt } from '@lib/common/types';
 import {
@@ -96,6 +97,30 @@ import {
 } from '@lib/common/db.constants';
 import { IsUnique } from '@lib/common/validators';
 import { EEntityValidationGroup } from '@lib/common/enums';
+
+class FirstLast {
+  @ApiPropertyOptional({
+    example: 'Ivan',
+    maxLength: DEFAULT_NAME_MAX_LEN,
+    minLength: DEFAULT_NAME_MIN_LEN,
+  })
+  @IsOptional({ always: true })
+  @IsString({ always: true })
+  @Length(DEFAULT_NAME_MIN_LEN, DEFAULT_NAME_MAX_LEN, { always: true })
+  @Column({ length: DEFAULT_NAME_MAX_LEN, nullable: true })
+  public first!: string;
+
+  @ApiPropertyOptional({
+    example: 'Trump',
+    maxLength: DEFAULT_NAME_MAX_LEN,
+    minLength: DEFAULT_NAME_MIN_LEN,
+  })
+  @IsOptional({ always: true })
+  @IsString({ always: true })
+  @Length(DEFAULT_NAME_MIN_LEN, DEFAULT_NAME_MAX_LEN, { always: true })
+  @Column({ length: DEFAULT_NAME_MAX_LEN, nullable: true })
+  public last!: string;
+}
 
 @Entity()
 export class Account {
@@ -118,35 +143,17 @@ export class Account {
   @Length(DEFAULT_EMAIL_MIN_LEN, DEFAULT_EMAIL_MAX_LEN, { always: true })
   public email!: string;
 
-  @ApiPropertyOptional({
-    example: 'Ivan',
-    maxLength: DEFAULT_NAME_MAX_LEN,
-    minLength: DEFAULT_NAME_MIN_LEN,
-  })
-  @IsOptional({ always: true })
-  @IsString({ always: true })
-  @Length(DEFAULT_NAME_MIN_LEN, DEFAULT_NAME_MAX_LEN, { always: true })
-  @Column({ length: DEFAULT_NAME_MAX_LEN, nullable: true })
-  public firstName?: string;
-
-  @ApiPropertyOptional({
-    example: 'Trump',
-    maxLength: DEFAULT_NAME_MAX_LEN,
-    minLength: DEFAULT_NAME_MIN_LEN,
-  })
-  @IsOptional({ always: true })
-  @IsString({ always: true })
-  @Length(DEFAULT_NAME_MIN_LEN, DEFAULT_NAME_MAX_LEN, { always: true })
-  @Column({ length: DEFAULT_NAME_MAX_LEN, nullable: true })
-  public lastName?: string;
+  @Column(() => Name)
+  @Type(() => Name)
+  public name: FirstLast;
 
   @ApiResponseProperty({
     example: 'Ivan Trump',
   })
   public get fullName(): string {
-    return this.firstName && this.lastName
-           ? `${ this.firstName } ${ this.lastName }`
-           : this.firstName || this.lastName || (this.constructor as typeof Account).NAMELESS_FULL_NAME;
+    return this.name.first && this.name.last
+           ? `${ this.name.first } ${ this.name.last }`
+           : this.name.first || this.name.last || (this.constructor as typeof Account).NAMELESS_FULL_NAME;
   }
 
 }
