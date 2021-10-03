@@ -3,7 +3,7 @@ import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { ApiPropertyOptions } from '@nestjs/swagger';
 import { createApiPropertyDecorator } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
-import { defaultMetadataStorage, TypeMetadata } from './@import-fix/class-transformer';
+import { defaultMetadataStorage, TypeMetadata, ExposeMetadata } from './@import-fix/class-transformer';
 import { getMetadataStorage, ValidationMetadata } from './@import-fix/class-validator';
 import { AnyObject, isClass, Type } from './utils';
 
@@ -184,11 +184,16 @@ export class ApiPropertyRefDecorator {
   }; // END copyClassValidatorDecorators()
 
   private copyClassTransformerDecorators(EntityConstructor: Type<unknown>): void {
-    const typeMetadata = defaultMetadataStorage.findTypeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
-    if (typeMetadata) {
-      const copy: TypeMetadata
-              = { ...typeMetadata, target: this.classProto.constructor, propertyName: this.propertyKey };
+    const type = defaultMetadataStorage.findTypeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
+    if (type) {
+      const copy: TypeMetadata = { ...type, target: this.classProto.constructor, propertyName: this.propertyKey };
       defaultMetadataStorage.addTypeMetadata(copy);
+    }
+
+    const expose = defaultMetadataStorage.findExposeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
+    if (expose) {
+      const copy: ExposeMetadata = { ...expose, target: this.classProto.constructor, propertyName: this.propertyKey };
+      defaultMetadataStorage.addExposeMetadata(copy);
     }
   }
 
