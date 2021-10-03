@@ -3,7 +3,7 @@ import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { ApiPropertyOptions } from '@nestjs/swagger';
 import { createApiPropertyDecorator } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
-import { defaultMetadataStorage, TypeMetadata, ExposeMetadata } from './@import-fix/class-transformer';
+import { defaultMetadataStorage, TypeMetadata, ExposeMetadata, ExcludeMetadata } from './@import-fix/class-transformer';
 import { getMetadataStorage, ValidationMetadata } from './@import-fix/class-validator';
 import { AnyObject, isClass, Type } from './utils';
 
@@ -194,6 +194,12 @@ export class ApiPropertyRefDecorator {
     if (expose) {
       const copy: ExposeMetadata = { ...expose, target: this.classProto.constructor, propertyName: this.propertyKey };
       defaultMetadataStorage.addExposeMetadata(copy);
+    }
+
+    const exclude = defaultMetadataStorage.findExcludeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
+    if (exclude) {
+      const copy: ExcludeMetadata = { ...exclude, target: this.classProto.constructor, propertyName: this.propertyKey };
+      defaultMetadataStorage.addExcludeMetadata(copy);
     }
   }
 

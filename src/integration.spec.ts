@@ -1,7 +1,7 @@
 import { Body, Controller, INestApplication, Module, Post } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 
-import { classToPlain, Expose, plainToClass, Type } from 'class-transformer';
+import { classToPlain, Exclude, Expose, plainToClass, Type } from 'class-transformer';
 import { IsInt, IsString, Max, Min, validate } from 'class-validator';
 import { ApiProperty, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ReferenceObject, SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
@@ -254,7 +254,36 @@ describe('Integration tests', () => {
           // assert
           expect(raw).toEqual({ name: ins.name });
         });
-      }); // END @Type() decorator
+      }); // END @Expose() decorator
+
+      describe('@Exclude() decorator', () => {
+        it('Basic usage, just copying @Exclude() decorator from an Entity to a DTO.', () => {
+          // arrange
+          class User {
+            public name!: string;
+
+            @Exclude()
+            public password!: string;
+          }
+          @ApiEntityRef(User)
+          class UserCreateDto {
+            @ApiPropertyRef()
+            public name!: string;
+
+            @ApiPropertyRef()
+            public password!: string;
+          }
+          const ins = new UserCreateDto();
+          ins.name = 'aaa';
+          ins.password = 'bbb';
+
+          // act
+          const raw = classToPlain(ins, { strategy: 'exposeAll' });
+
+          // assert
+          expect(raw).toEqual({ name: ins.name });
+        });
+      }); // END @Exclude() decorator
     });
   });
 });
