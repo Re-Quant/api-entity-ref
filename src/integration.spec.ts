@@ -196,7 +196,7 @@ describe('Integration tests', () => {
 
   describe('Testing copying class-transformer decorators', () => {
     describe('GIVEN: Two classes: User & UserCreateDto. Last one with Api*Ref decorators', () => {
-      describe('@Type() decorator', () => {
+      describe(`@${ Type.name }() decorator`, () => {
         it(`Testing basic usage, just copying @Type() decorator.
             WHEN: User.name is FirstLastName class and decorated with @Type() decorator
             THEN: The decorator should be copied to UserCreateDto`, () => {
@@ -227,7 +227,7 @@ describe('Integration tests', () => {
         });
       }); // END @Type() decorator
 
-      describe('@Expose() decorator', () => {
+      describe(`@${ Expose.name }() decorator`, () => {
         it('Basic usage, just copying @Expose() decorator from a property-level an Entity to a DTO.', () => {
           // arrange
           class User {
@@ -256,7 +256,7 @@ describe('Integration tests', () => {
         });
       }); // END @Expose() decorator
 
-      describe('@Exclude() decorator', () => {
+      describe(`@${ Exclude.name }() decorator`, () => {
         it('Basic usage, just copying @Exclude() decorator from a property-level an Entity to a DTO.', () => {
           // arrange
           class User {
@@ -285,10 +285,10 @@ describe('Integration tests', () => {
         });
       }); // END @Exclude() decorator
 
-      describe('@Expose() & @Exclude() together', () => {
-        it(`Testing class-level usage of @Expose.
-            WHEN: @Expose() decorator is added to the User class at the class level.
-             AND: @Exclude() decorator is added to the .password field
+      describe(`@${ Expose.name }() & @${ Exclude.name } () together`, () => {
+        it(`Testing class-level usage of @${ Expose.name }().
+            WHEN: @${ Expose.name }() decorator is added to the User class at the class level.
+             AND: @${ Exclude.name }() decorator is added to the .password field
              AND: strategy is 'excludeAll'
             THEN: class-level & property-level decorators should be copied`, () => {
           // arrange
@@ -318,9 +318,9 @@ describe('Integration tests', () => {
           expect(raw).toEqual({ name: ins.name });
         });
 
-        it(`Testing class-level usage of @Exclude.
-            WHEN: @Exclude() decorator is added to the User class at the class level.
-             AND: @Expose() decorator is added to the .name field
+        it(`Testing class-level usage of @${ Exclude.name }().
+            WHEN: @${ Exclude.name }() decorator is added to the User class at the class level.
+             AND: @${ Expose.name }() decorator is added to the .name field
              AND: strategy is 'exposeAll'
             THEN: class-level & property-level decorators should be copied`, () => {
           // arrange
