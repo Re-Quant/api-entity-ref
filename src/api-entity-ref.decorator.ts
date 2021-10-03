@@ -31,9 +31,10 @@ export function ApiEntityRef<T extends AnyObject>(
     ) {
       if (!hasApiDecorators(targetOrItsParent)) continue; // eslint-disable-line no-continue
 
-      targetOrItsParent[apiDecoratorsSymbol].forEach(({ swagger, validators }) => {
-        swagger(EntityConstructor);
-        validators(EntityConstructor, target, groups);
+      targetOrItsParent[apiDecoratorsSymbol].forEach((v) => {
+        v.swagger(EntityConstructor);
+        v.validators(EntityConstructor, target, groups);
+        v.forClassTransformations(EntityConstructor);
       });
     }
     if (i >= PARENTS_LIMIT) {

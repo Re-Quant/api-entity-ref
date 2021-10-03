@@ -1,12 +1,13 @@
 import { Body, Controller, INestApplication, Module, Post } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 
+import { plainToClass, Type } from 'class-transformer';
 import { IsInt, IsString, Max, Min, validate } from 'class-validator';
 import { ApiProperty, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ReferenceObject, SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 import { ApiEntityRef, ApiPropertyRef } from './public-api';
-import { Type } from './utils';
+import { Type as ClassType } from './utils';
 
 describe('Integration tests', () => {
   describe('Test copying class-validator decorators', () => {
@@ -133,7 +134,7 @@ describe('Integration tests', () => {
 
   describe('Testing copying nestjs/swagger decorators', () => {
     describe('GIVEN: Two classes: User & UserCreateDto. Last one with Api*Ref decorators', () => {
-      const createApp = async (...controllers: Type[]) => {
+      const createApp = async (...controllers: ClassType[]) => {
         @Module({ controllers })
         class AppModule {}
         const fixture = await Test.createTestingModule({
@@ -192,4 +193,39 @@ describe('Integration tests', () => {
       });
     });
   }); // END: Testing copying nestjs/swagger decorators
+
+  describe('Testing copying class-transformer decorators', () => {
+    describe('GIVEN: Two classes: User & UserCreateDto. Last one with Api*Ref decorators', () => {
+      describe('@Type() decorator', () => {
+        it(`Testing basic usage, just copying @Type() decorator.
+            WHEN: User.name is FirstLastName class and decorated with @Type() decorator
+            THEN: The decorator should be copied to UserCreateDto`, () => {
+          // arrange
+          class FirstLastName {
+            public first!: string;
+            public last!: string;
+          }
+          class User {
+            @Type()
+            public name!: FirstLastName;
+          }
+          @ApiEntityRef(User)
+          class UserCreateDto {
+            @ApiPropertyRef()
+            public name!: FirstLastName;
+          }
+          const raw = {
+            name: { first: 'aaa', last: 'bbb' },
+          };
+
+          // act
+          const ins = plainToClass(UserCreateDto, raw);
+
+          // assert
+          expect(ins).toEqual(raw);
+          expect(ins.name).toBeInstanceOf(FirstLastName);
+        });
+      }); // END @Type() decorator
+    });
+  });
 });

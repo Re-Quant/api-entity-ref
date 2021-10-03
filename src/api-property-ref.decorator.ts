@@ -3,7 +3,8 @@ import { DECORATORS } from '@nestjs/swagger/dist/constants';
 import { ApiPropertyOptions } from '@nestjs/swagger';
 import { createApiPropertyDecorator } from '@nestjs/swagger/dist/decorators/api-property.decorator';
 
-import { ValidationMetadata, getMetadataStorage } from './@import-fix/class-validator';
+import { defaultMetadataStorage, TypeMetadata } from './@import-fix/class-transformer';
+import { getMetadataStorage, ValidationMetadata } from './@import-fix/class-validator';
 import { AnyObject, isClass, Type } from './utils';
 
 export const apiDecoratorsSymbol = Symbol('api-decorators');
@@ -17,6 +18,7 @@ export interface ApiEntityRefType extends Type<unknown> {
       realTarget: Type,
       groups: string[],
     ) => void;
+    forClassTransformations: (EntityConstructor: Type<unknown>) => void;
   }[];
   [entityConstructorSymbol]?: Type<unknown>;
 }
@@ -78,6 +80,7 @@ export class ApiPropertyRefDecorator {
     ).push({
       swagger: this.copySwaggerDecorators,
       validators: this.copyClassValidatorDecorators,
+      forClassTransformations: this.copyClassTransformerDecorators.bind(this),
     });
   }
 
@@ -118,7 +121,7 @@ export class ApiPropertyRefDecorator {
     } else if (!_.isEmpty(this.swaggerOptions)) {
       createApiPropertyDecorator(this.swaggerOptions)(this.classProto, this.propertyKey);
     }
-  };
+  }; // END copySwaggerDecorators()
 
   private copyClassValidatorDecorators = (
     EntityConstructor: Type<unknown>,
@@ -178,7 +181,17 @@ export class ApiPropertyRefDecorator {
         this.classValidatorStorage.addValidationMetadata(updatedValidator);
       });
     }
-  };
+  }; // END copyClassValidatorDecorators()
+
+  private copyClassTransformerDecorators(EntityConstructor: Type<unknown>): void {
+    const typeMetadata = defaultMetadataStorage.findTypeMetadata(EntityConstructor, this.normalizedEntityPropertyKey);
+    if (typeMetadata) {
+      const copy: TypeMetadata
+              = { ...typeMetadata, target: this.classProto.constructor, propertyName: this.propertyKey };
+      defaultMetadataStorage.addTypeMetadata(copy);
+    }
+  }
+
 }
 
 export function ApiPropertyRef(
