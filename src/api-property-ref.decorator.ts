@@ -208,6 +208,11 @@ export class ApiPropertyRefDecorator {
       const copy: ExcludeMetadata = { ...exclude, target: this.classProto.constructor, propertyName: this.propertyKey };
       storage.addExcludeMetadata(copy);
     }
+    const excludeOnClass = storage.findExcludeMetadata(EntityConstructor, undefined as any /* typing issue */);
+    if (excludeOnClass) {
+      const copy: ExcludeMetadata = { ...excludeOnClass, target: this.classProto.constructor, propertyName: undefined };
+      storage.addExcludeMetadata(copy);
+    }
   }
 
 }

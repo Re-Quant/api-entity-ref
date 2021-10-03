@@ -286,7 +286,7 @@ describe('Integration tests', () => {
       }); // END @Exclude() decorator
 
       describe('@Expose() & @Exclude() together', () => {
-        it(`Testing class-level using of @Expose.
+        it(`Testing class-level usage of @Expose.
             WHEN: @Expose() decorator is added to the User class at the class level.
              AND: @Exclude() decorator is added to the .password field
              AND: strategy is 'excludeAll'
@@ -317,7 +317,39 @@ describe('Integration tests', () => {
           // assert
           expect(raw).toEqual({ name: ins.name });
         });
-      });
+
+        it(`Testing class-level usage of @Exclude.
+            WHEN: @Exclude() decorator is added to the User class at the class level.
+             AND: @Expose() decorator is added to the .name field
+             AND: strategy is 'exposeAll'
+            THEN: class-level & property-level decorators should be copied`, () => {
+          // arrange
+          @Exclude()
+          class User {
+            @Expose()
+            public name!: string;
+
+            public password!: string;
+          }
+          @ApiEntityRef(User)
+          class UserCreateDto {
+            @ApiPropertyRef()
+            public name!: string;
+
+            @ApiPropertyRef()
+            public password!: string;
+          }
+          const ins = new UserCreateDto();
+          ins.name = 'aaa';
+          ins.password = 'bbb';
+
+          // act
+          const raw = classToPlain(ins, { strategy: 'exposeAll' });
+
+          // assert
+          expect(raw).toEqual({ name: ins.name });
+        });
+      }); // END @Expose() & @Exclude() together
     });
   });
 });
