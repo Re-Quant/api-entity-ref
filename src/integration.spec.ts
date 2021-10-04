@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 
 import { classToPlain, Exclude, Expose, plainToClass, Transform, Type } from 'class-transformer';
 import { IsInt, IsString, Max, Min, validate } from 'class-validator';
-import { ApiProperty, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ReferenceObject, SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 
 import { ApiEntityRef, ApiPropertyRef } from './public-api';
@@ -156,6 +156,7 @@ describe('Integration tests', () => {
         }
         return data as SchemaObject;
       };
+
       it(`Testing simple case. Just copying swagger decorators & patching options.
         WHEN: There some fields on User class decorated with @ApiProperty()
         THEN: All swagger decorators should be copy-pasted to the DTO`, async () => {
@@ -190,6 +191,55 @@ describe('Integration tests', () => {
         expect(d(d(schemas.UserCreateDto)?.properties?.id)).toEqual({ type: 'number', minimum: 1 });
         expect(d(d(schemas.UserCreateDto)?.properties?.name)).toEqual({ type: 'string' });
         expect(d(schemas.UserCreateDto)?.required).toEqual(['id']);
+      });
+
+      it.only(`Two DTOs extended from the same Base DTO class.
+          WHEN: UserCreateDto extends BaseDto
+           AND: UserUpdateDto extends BaseDto
+           AND: All 3 DTO classes has fields decorated with @${ ApiPropertyRef.name }()
+          THEN: Both UserCreateDto & UserUpdateDto should have copied decorators.`, async () => {
+        // arrange
+        class User {
+          @ApiProperty()
+          public email!: string;
+
+          @ApiPropertyOptional()
+          public name?: string;
+        }
+        abstract class UserBaseDto {
+          @ApiPropertyRef()
+          public name?: string;
+        }
+        @ApiEntityRef(User)
+        class UserCreateDto extends UserBaseDto {
+          @ApiPropertyRef()
+          public email!: string;
+        }
+        @ApiEntityRef(User)
+        class UserUpdateDto extends UserBaseDto {
+          @ApiPropertyRef({ required: false })
+          public email?: string;
+        }
+        @Controller()
+        class UserController {
+          // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
+          @Post() public create(@Body() body: UserCreateDto): void {}
+          // eslint-disable-next-line @typescript-eslint/no-empty-function,@typescript-eslint/no-unused-vars
+          @Post() public update(@Body() body: UserUpdateDto /* ? */): void {}
+        }
+        const app = await createApp(UserController);
+
+        // act
+        const schemas = buildDocSchemas(app);
+
+        // assert
+        expect(d(d(schemas.UserCreateDto)?.properties?.email)).toEqual({ type: 'string' });
+        expect(d(d(schemas.UserCreateDto)?.properties?.name)).toEqual({ type: 'string' });
+        expect(d(schemas.UserCreateDto)?.required).toEqual(['email']);
+
+        expect(d(d(schemas.UserUpdateDto)?.properties?.email)).toEqual({ type: 'string' });
+        expect(d(d(schemas.UserUpdateDto)?.properties?.name)).toEqual({ type: 'string' });
+        expect(d(schemas.UserUpdateDto)?.required).toBeUndefined();
       });
     });
   }); // END: Testing copying nestjs/swagger decorators

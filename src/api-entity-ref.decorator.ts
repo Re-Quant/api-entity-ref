@@ -21,22 +21,25 @@ export function ApiEntityRef<T extends AnyObject>(
 
     target[entityConstructorSymbol] = EntityConstructor;
 
+    const targetAndAllParents = [];
     const PARENTS_LIMIT = 16;
     let i = 0;
     for (
       let targetOrItsParent = target;
-      i < PARENTS_LIMIT && targetOrItsParent;
+      i < PARENTS_LIMIT && targetOrItsParent && targetOrItsParent !== Object.prototype;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       i++, targetOrItsParent = Object.getPrototypeOf(targetOrItsParent)
     ) {
       if (!hasApiDecorators(targetOrItsParent)) continue; // eslint-disable-line no-continue
-
+      targetAndAllParents.push(targetOrItsParent);
+    }
+    targetAndAllParents.reverse().forEach(targetOrItsParent =>
       targetOrItsParent[apiDecoratorsSymbol].forEach((v) => {
         v.swagger(EntityConstructor);
         v.validators(EntityConstructor, target, groups);
         v.forClassTransformations(EntityConstructor);
-      });
-    }
+      }),
+    );
     if (i >= PARENTS_LIMIT) {
       // eslint-disable-next-line no-console
       console.warn(`Warning! ${ ApiEntityRef.name }: parents limit faced for ${ target.name }. It looks like a recursive prototype link`);
