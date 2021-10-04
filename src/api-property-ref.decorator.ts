@@ -92,6 +92,10 @@ export class ApiPropertyRefDecorator {
   }
 
   private copySwaggerDecorators = (EntityConstructor: Type<unknown>): void => {
+    const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, this.classProto) as string[] || [];
+    const key = `:${ this.propertyKey }`;
+    if (properties.includes(key)) return;
+
     const existingEntityMetadata = Reflect.getMetadata(
       DECORATORS.API_MODEL_PROPERTIES,
       EntityConstructor.prototype,
@@ -115,16 +119,11 @@ export class ApiPropertyRefDecorator {
                              };
       Reflect.defineMetadata(DECORATORS.API_MODEL_PROPERTIES, metadataToSave, this.classProto, this.propertyKey);
 
-      const properties = Reflect.getMetadata(DECORATORS.API_MODEL_PROPERTIES_ARRAY, this.classProto) as string[] || [];
-
-      const key = `:${ this.propertyKey }`;
-      if (!properties.includes(key)) {
-        Reflect.defineMetadata(
-          DECORATORS.API_MODEL_PROPERTIES_ARRAY,
-          [...properties, `:${ this.propertyKey }`],
-          this.classProto,
-        );
-      }
+      Reflect.defineMetadata(
+        DECORATORS.API_MODEL_PROPERTIES_ARRAY,
+        [...properties, `:${ this.propertyKey }`],
+        this.classProto,
+      );
     } else if (!_.isEmpty(this.swaggerOptions)) {
       createApiPropertyDecorator(this.swaggerOptions)(this.classProto, this.propertyKey);
     }

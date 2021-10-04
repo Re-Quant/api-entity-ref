@@ -193,7 +193,7 @@ describe('Integration tests', () => {
         expect(d(schemas.UserCreateDto)?.required).toEqual(['id']);
       });
 
-      it.only(`Two DTOs extended from the same Base DTO class.
+      it(`Two DTOs extended from the same Base DTO class.
           WHEN: UserCreateDto extends BaseDto
            AND: UserUpdateDto extends BaseDto
            AND: All 3 DTO classes has fields decorated with @${ ApiPropertyRef.name }()
