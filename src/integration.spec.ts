@@ -442,8 +442,8 @@ describe('Integration tests', () => {
       });
 
       it(`Entity inheritance.
-          WHEN:  
-          THEN: `, () => {
+          WHEN: User extends UserBase, both have class-transformer decorators on some fields
+          THEN: DTO should have merged decorators from User & UserBase`, () => {
         // arrange
         class Name {
           public first!: string;
